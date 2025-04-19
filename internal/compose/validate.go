@@ -3,10 +3,19 @@ package compose
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 )
 
 func validateRequest(r *http.Request) (ComposeRequest, *ComposeError) {
 	var req ComposeRequest
+
+	if apiKey := r.Header.Get("X-API-Key"); apiKey == "" || apiKey != os.Getenv("API_KEY") {
+		return req, &ComposeError{
+			StatusCode: http.StatusUnauthorized,
+			Code:       ErrInternalError,
+			Details:    "Invalid API key",
+		}
+	}
 
 	if r.Method != http.MethodPost {
 		return req, &ComposeError{

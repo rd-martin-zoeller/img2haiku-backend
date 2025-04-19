@@ -7,18 +7,37 @@ import (
 	"testing"
 )
 
+const validApiKey, invalidApiKey = "valid_api_key", "invalid_api_key"
+
 func TestValidateRequest(t *testing.T) {
 	cases := []struct {
 		name           string
 		httpMethod     string
 		body           *ComposeRequest
+		apiKey         string
 		wantStatusCode int
 		wantErrorCode  ErrorCode
 		wantDetails    string
 	}{
 		{
+			name:           "API key is missing",
+			httpMethod:     "GET",
+			wantStatusCode: 401,
+			wantErrorCode:  ErrInternalError,
+			wantDetails:    "Invalid API key",
+		},
+		{
+			name:           "API key is invalid",
+			httpMethod:     "GET",
+			apiKey:         invalidApiKey,
+			wantStatusCode: 401,
+			wantErrorCode:  ErrInternalError,
+			wantDetails:    "Invalid API key",
+		},
+		{
 			name:           "method is not POST",
 			httpMethod:     "GET",
+			apiKey:         validApiKey,
 			wantStatusCode: 405,
 			wantErrorCode:  ErrInternalError,
 			wantDetails:    "Method not allowed",
@@ -26,6 +45,7 @@ func TestValidateRequest(t *testing.T) {
 		{
 			name:           "body is nil",
 			httpMethod:     "POST",
+			apiKey:         validApiKey,
 			wantStatusCode: 500,
 			wantErrorCode:  ErrInternalError,
 			wantDetails:    "Failed to decode request body: EOF",
@@ -34,6 +54,7 @@ func TestValidateRequest(t *testing.T) {
 			name:           "body is empty",
 			httpMethod:     "POST",
 			body:           &ComposeRequest{},
+			apiKey:         validApiKey,
 			wantStatusCode: 500,
 			wantErrorCode:  ErrInternalError,
 			wantDetails:    "Language is required",
@@ -42,6 +63,7 @@ func TestValidateRequest(t *testing.T) {
 			name:           "language is empty",
 			httpMethod:     "POST",
 			body:           &ComposeRequest{Language: ""},
+			apiKey:         validApiKey,
 			wantStatusCode: 500,
 			wantErrorCode:  ErrInternalError,
 			wantDetails:    "Language is required",
@@ -50,6 +72,7 @@ func TestValidateRequest(t *testing.T) {
 			name:           "base64 image is empty",
 			httpMethod:     "POST",
 			body:           &ComposeRequest{Language: "English", Base64Image: ""},
+			apiKey:         validApiKey,
 			wantStatusCode: 500,
 			wantErrorCode:  ErrInternalError,
 			wantDetails:    "Base64 image is required",
@@ -58,11 +81,15 @@ func TestValidateRequest(t *testing.T) {
 
 	for _, c := range cases {
 		c := c // capture range variable
+		t.Setenv("API_KEY", validApiKey)
+
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
+
 			bodyBytes := requestJSONHelper(t, c.body)
 
 			req := httptest.NewRequest(c.httpMethod, "/", strings.NewReader(string(bodyBytes)))
+			req.Header.Set("X-API-Key", c.apiKey)
 
 			_, err := validateRequest(req)
 
