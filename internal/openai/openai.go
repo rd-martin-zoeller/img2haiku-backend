@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -17,22 +18,14 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 
 	bodyBytes, err := json.Marshal(reqObj)
 	if err != nil {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to encode request body: " + err.Error(),
-		}
+		return haiku, newInternalErr("Failed to encode request body: %s", err.Error())
 	}
 
 	req, reqErr := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(bodyBytes))
 	req = req.WithContext(ctx)
 
 	if reqErr != nil {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to create request: " + reqErr.Error(),
-		}
+		return haiku, newInternalErr("Failed to create request: %s", reqErr.Error())
 	}
 
 	req.Header.Set("Authorization", "Bearer "+c.ApiKey)
@@ -41,21 +34,13 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 	resp, apiErr := c.Client.Do(req)
 
 	if apiErr != nil {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to call OpenAI API: " + apiErr.Error(),
-		}
+		return haiku, newInternalErr("Failed to call OpenAI API: %s", apiErr.Error())
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return haiku, &types.ComposeError{
-			StatusCode: resp.StatusCode,
-			Code:       types.ErrInternalError,
-			Details:    "OpenAI API returned an error: " + resp.Status,
-		}
+		return haiku, newInternalErr("OpenAI API returned an error: %s", resp.Status)
 	}
 
 	return handleResponseBody(resp)
@@ -92,55 +77,31 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 	respBytes, ioErr := io.ReadAll(resp.Body)
 
 	if ioErr != nil {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to read response body: " + ioErr.Error(),
-		}
+		return haiku, newInternalErr("Failed to read response body: %s", ioErr.Error())
 	}
 
 	var openAiResponse OpenAiResponseBody
 	if err := json.NewDecoder(bytes.NewBuffer(respBytes)).Decode(&openAiResponse); err != nil {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to decode response body: " + err.Error(),
-		}
+		return haiku, newInternalErr("Failed to decode response body: %s", err.Error())
 	}
 
 	if len(openAiResponse.Choices) == 0 {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "No choices found in response",
-		}
+		return haiku, newInternalErr("%s", "No choices found in response")
 	}
 
 	answer := openAiResponse.Choices[0].Message.Content
 
 	var haikuResponse OpenAiHaikuResponse
 	if err := json.Unmarshal([]byte(answer), &haikuResponse); err != nil {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to unmarshal answer JSON: " + err.Error() + "\n" + answer,
-		}
+		return haiku, newInternalErr("Failed to unmarshal answer JSON: %s\n%s", err.Error(), answer)
 	}
 
 	if haikuResponse.Error != "" {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusBadRequest,
-			Code:       types.ErrInvalidRequest,
-			Details:    haikuResponse.Error,
-		}
+		return haiku, newErr(http.StatusBadRequest, types.ErrInvalidRequest, "%s", haikuResponse.Error)
 	}
 
 	if haikuResponse.Haiku == "" || haikuResponse.Description == "" {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusBadRequest,
-			Code:       types.ErrInvalidRequest,
-			Details:    "Invalid response format: haiku or description not found " + answer,
-		}
+		return haiku, newErr(http.StatusBadRequest, types.ErrInvalidRequest, "Invalid response format: haiku or description not found %s", answer)
 	}
 
 	haiku.Haiku = sanitizeHaiku(haikuResponse.Haiku)
@@ -152,4 +113,12 @@ func sanitizeHaiku(haiku string) string {
 	// Sometimes, ChatGPT escapes newline characters (\n) as \\n.
 	// This function replaces them with actual newlines.
 	return strings.ReplaceAll(haiku, "\\n", "\n")
+}
+
+func newErr(status int, code types.ErrorCode, msgFmt string, args ...any) *types.ComposeError {
+	return &types.ComposeError{StatusCode: status, Code: code, Details: fmt.Sprintf(msgFmt, args...)}
+}
+
+func newInternalErr(msgFmt string, args ...any) *types.ComposeError {
+	return newErr(http.StatusInternalServerError, types.ErrInternalError, msgFmt, args...)
 }
