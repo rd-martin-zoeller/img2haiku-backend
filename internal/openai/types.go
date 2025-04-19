@@ -7,41 +7,41 @@ type OpenAiClient struct {
 	Client *http.Client
 }
 
-type OpenAiRequest struct {
+type openAiRequest struct {
 	Model       string          `json:"model"`
-	Messages    []OpenAiMessage `json:"messages"`
+	Messages    []openAiMessage `json:"messages"`
 	MaxTokens   int             `json:"max_tokens"`
 	Temperature float32         `json:"temperature"`
 }
 
-type OpenAiMessage struct {
+type openAiMessage struct {
 	Role    string                 `json:"role"`
-	Content []OpenAiMessageContent `json:"content"`
+	Content []openAiMessageContent `json:"content"`
 }
 
-type OpenAiMessageContent struct {
+type openAiMessageContent struct {
 	Type     string               `json:"type"`
 	Text     string               `json:"text,omitempty"`
-	ImageURL *OpenAiImageURLField `json:"image_url,omitempty"`
+	ImageURL *openAiImageURLField `json:"image_url,omitempty"`
 }
 
-type OpenAiImageURLField struct {
+type openAiImageURLField struct {
 	URL string `json:"url"`
 }
 
-type OpenAiResponseBody struct {
-	Choices []OpenAiResponseChoice `json:"choices"`
+type openAiResponseBody struct {
+	Choices []openAiResponseChoice `json:"choices"`
 }
 
-type OpenAiResponseChoice struct {
-	Message OpenAiResponseMessage `json:"message"`
+type openAiResponseChoice struct {
+	Message openAiResponseMessage `json:"message"`
 }
 
-type OpenAiResponseMessage struct {
+type openAiResponseMessage struct {
 	Content string `json:"content"`
 }
 
-type OpenAiHaikuResponse struct {
+type openAiHaikuResponse struct {
 	Haiku       string `json:"haiku"`
 	Description string `json:"description"`
 	Error       string `json:"error"`

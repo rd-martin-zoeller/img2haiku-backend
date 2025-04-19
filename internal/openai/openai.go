@@ -45,20 +45,20 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 	return handleResponseBody(resp)
 }
 
-func makeRequestObject(prompt, base64Image string) *OpenAiRequest {
-	return &OpenAiRequest{
+func makeRequestObject(prompt, base64Image string) *openAiRequest {
+	return &openAiRequest{
 		Model: "gpt-4o-2024-08-06",
-		Messages: []OpenAiMessage{
+		Messages: []openAiMessage{
 			{
 				Role: "user",
-				Content: []OpenAiMessageContent{
+				Content: []openAiMessageContent{
 					{
 						Type: "text",
 						Text: prompt,
 					},
 					{
 						Type: "image_url",
-						ImageURL: &OpenAiImageURLField{
+						ImageURL: &openAiImageURLField{
 							URL: "data:image/jpeg;base64," + base64Image,
 						},
 					},
@@ -73,7 +73,7 @@ func makeRequestObject(prompt, base64Image string) *OpenAiRequest {
 func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) {
 	var haiku types.Haiku
 
-	var openAiResponse OpenAiResponseBody
+	var openAiResponse openAiResponseBody
 	if err := json.NewDecoder(resp.Body).Decode(&openAiResponse); err != nil {
 		return haiku, utils.NewInternalErr("Failed to decode response body: %s", err.Error())
 	}
@@ -84,7 +84,7 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 
 	answer := openAiResponse.Choices[0].Message.Content
 
-	var haikuResponse OpenAiHaikuResponse
+	var haikuResponse openAiHaikuResponse
 	if err := json.Unmarshal([]byte(answer), &haikuResponse); err != nil {
 		return haiku, utils.NewInternalErr("Failed to unmarshal answer JSON: %s\n%s", err.Error(), answer)
 	}

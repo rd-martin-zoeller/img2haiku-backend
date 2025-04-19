@@ -29,26 +29,26 @@ func TestMakeRequestObject(t *testing.T) {
 func TestHandleResponseBody(t *testing.T) {
 	cases := []struct {
 		name             string
-		responseBody     OpenAiResponseBody
+		responseBody     openAiResponseBody
 		wantHaiku        string
 		wantErrorMessage string
 	}{
 		{
 			name:             "no choices field",
-			responseBody:     OpenAiResponseBody{},
+			responseBody:     openAiResponseBody{},
 			wantErrorMessage: "No choices found in response",
 		},
 		{
 			name:             "no choices",
-			responseBody:     OpenAiResponseBody{Choices: []OpenAiResponseChoice{}},
+			responseBody:     openAiResponseBody{Choices: []openAiResponseChoice{}},
 			wantErrorMessage: "No choices found in response",
 		},
 		{
 			name: "not a JSON content",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: "EXAMPLE_HAIKU",
 						},
 					},
@@ -58,10 +58,10 @@ func TestHandleResponseBody(t *testing.T) {
 		},
 		{
 			name: "error JSON",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: `{"error":"EXAMPLE_ERROR"}`,
 						},
 					},
@@ -71,10 +71,10 @@ func TestHandleResponseBody(t *testing.T) {
 		},
 		{
 			name: "no relevant JSON field",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: `{"some_other_field":"SOME_OTHER_FIELD"}`,
 						},
 					},
@@ -84,10 +84,10 @@ func TestHandleResponseBody(t *testing.T) {
 		},
 		{
 			name: "description missing in JSON",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: `{"haiku":"EXAMPLE_HAIKU"}`,
 						},
 					},
@@ -97,10 +97,10 @@ func TestHandleResponseBody(t *testing.T) {
 		},
 		{
 			name: "haiku missing in JSON",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: `{"description":"EXAMPLE_DESCRIPTION"}`,
 						},
 					},
@@ -110,10 +110,10 @@ func TestHandleResponseBody(t *testing.T) {
 		},
 		{
 			name: "valid JSON",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: `{"description":"EXAMPLE_DESCRIPTION","haiku":"EXAMPLE_HAIKU"}`,
 						},
 					},
@@ -123,10 +123,10 @@ func TestHandleResponseBody(t *testing.T) {
 		},
 		{
 			name: "sanitizes valid JSON",
-			responseBody: OpenAiResponseBody{
-				Choices: []OpenAiResponseChoice{
+			responseBody: openAiResponseBody{
+				Choices: []openAiResponseChoice{
 					{
-						Message: OpenAiResponseMessage{
+						Message: openAiResponseMessage{
 							Content: `{"description":"EXAMPLE_DESCRIPTION","haiku":"EXAMPLE_HAIKU\\nEXAMPLE_HAIKU"}`,
 						},
 					},
