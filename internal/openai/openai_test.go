@@ -26,18 +26,6 @@ func TestMakeRequestObject(t *testing.T) {
 	}
 }
 
-type OpenAiResponseBody struct {
-	Choices []OpenAiResponseChoice `json:"choices"`
-}
-
-type OpenAiResponseChoice struct {
-	Message OpenAiResponseMessage `json:"message"`
-}
-
-type OpenAiResponseMessage struct {
-	Content string `json:"content"`
-}
-
 func TestHandleResponseBody(t *testing.T) {
 	cases := []struct {
 		name             string
