@@ -9,19 +9,19 @@ import (
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/utils"
 )
 
-type openAiResponseBody struct {
-	Choices []openAiResponseChoice `json:"choices"`
+type response struct {
+	Choices []choice `json:"choices"`
 }
 
-type openAiResponseChoice struct {
-	Message openAiResponseMessage `json:"message"`
+type choice struct {
+	Message message `json:"message"`
 }
 
-type openAiResponseMessage struct {
+type message struct {
 	Content string `json:"content"`
 }
 
-type openAiHaikuResponse struct {
+type haikuAnswer struct {
 	Haiku       string `json:"haiku"`
 	Description string `json:"description"`
 	Error       string `json:"error"`
@@ -32,7 +32,7 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 
 	defer resp.Body.Close()
 
-	var openAiResponse openAiResponseBody
+	var openAiResponse response
 	if err := json.NewDecoder(resp.Body).Decode(&openAiResponse); err != nil {
 		return haiku, utils.NewInternalErr("Failed to decode response body: %s", err.Error())
 	}
@@ -43,7 +43,7 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 
 	answer := openAiResponse.Choices[0].Message.Content
 
-	var haikuResponse openAiHaikuResponse
+	var haikuResponse haikuAnswer
 	if err := json.Unmarshal([]byte(answer), &haikuResponse); err != nil {
 		return haiku, utils.NewInternalErr("Failed to unmarshal answer JSON: %s\n%s", err.Error(), answer)
 	}
