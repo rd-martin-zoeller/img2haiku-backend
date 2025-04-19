@@ -1,6 +1,11 @@
 package openai
 
-type OpenAiClient struct{}
+import "net/http"
+
+type OpenAiClient struct {
+	ApiKey string
+	Client *http.Client
+}
 
 type OpenAiRequest struct {
 	Model       string          `json:"model"`
