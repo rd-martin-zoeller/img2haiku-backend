@@ -15,6 +15,8 @@ type OpenAiClient struct {
 	Client *http.Client
 }
 
+const apiURL = "https://api.openai.com/v1/chat/completions"
+
 func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (types.Haiku, *types.ComposeError) {
 	var haiku types.Haiku
 	reqObj := buildRequest(prompt, base64Image)
@@ -24,7 +26,7 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 		return haiku, utils.NewInternalErr("Failed to encode request body: %s", err.Error())
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return haiku, utils.NewInternalErr("Failed to create request: %s", err.Error())
 	}
