@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"strings"
 
@@ -74,14 +73,8 @@ func makeRequestObject(prompt, base64Image string) *OpenAiRequest {
 func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) {
 	var haiku types.Haiku
 
-	respBytes, ioErr := io.ReadAll(resp.Body)
-
-	if ioErr != nil {
-		return haiku, utils.NewInternalErr("Failed to read response body: %s", ioErr.Error())
-	}
-
 	var openAiResponse OpenAiResponseBody
-	if err := json.NewDecoder(bytes.NewBuffer(respBytes)).Decode(&openAiResponse); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&openAiResponse); err != nil {
 		return haiku, utils.NewInternalErr("Failed to decode response body: %s", err.Error())
 	}
 
