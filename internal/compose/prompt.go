@@ -2,11 +2,11 @@ package compose
 
 import (
 	"bytes"
-	"net/http"
 	"strings"
 	"text/template"
 
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/utils"
 )
 
 func makePrompt(language string, tags []string) (string, *types.ComposeError) {
@@ -47,20 +47,12 @@ func makePrompt(language string, tags []string) (string, *types.ComposeError) {
 
 	template, err := template.New("prompt").Parse(promptTemplate)
 	if err != nil {
-		return prompt, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to parse prompt template: " + err.Error(),
-		}
+		return prompt, utils.NewInternalErr("Failed to parse prompt template: %s", err.Error())
 	}
 
 	var buff bytes.Buffer
 	if err := template.Execute(&buff, data); err != nil {
-		return prompt, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "Failed to execute prompt template: " + err.Error(),
-		}
+		return prompt, utils.NewInternalErr("Failed to execute prompt template: %s", err.Error())
 	}
 
 	return buff.String(), nil
