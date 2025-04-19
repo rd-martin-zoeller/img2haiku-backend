@@ -3,7 +3,6 @@ package openai
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -107,8 +106,8 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 		}
 	}
 
-	var respMap map[string]any
-	if err := json.NewDecoder(bytes.NewBuffer(respBytes)).Decode(&respMap); err != nil {
+	var openAiResponse OpenAiResponseBody
+	if err := json.NewDecoder(bytes.NewBuffer(respBytes)).Decode(&openAiResponse); err != nil {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
 			Code:       types.ErrInternalError,
@@ -116,8 +115,7 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 		}
 	}
 
-	rawChoices, ok := respMap["choices"]
-	if !ok {
+	if len(openAiResponse.Choices) == 0 {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
 			Code:       types.ErrInternalError,
@@ -125,27 +123,10 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 		}
 	}
 
-	choices, ok := rawChoices.([]any)
-	if !ok {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "No choices found in response",
-		}
-	}
+	answer := openAiResponse.Choices[0].Message.Content
 
-	if len(choices) == 0 {
-		return haiku, &types.ComposeError{
-			StatusCode: http.StatusInternalServerError,
-			Code:       types.ErrInternalError,
-			Details:    "No choices found in response",
-		}
-	}
-
-	answer := choices[0].(map[string]any)["message"].(map[string]any)["content"].(string)
-
-	var answerJSON map[string]any
-	if err := json.Unmarshal([]byte(answer), &answerJSON); err != nil {
+	var haikuResponse OpenAiHaikuResponse
+	if err := json.Unmarshal([]byte(answer), &haikuResponse); err != nil {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
 			Code:       types.ErrInternalError,
@@ -153,19 +134,15 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 		}
 	}
 
-	answerHaiku, haikuOk := stringField(answerJSON, "haiku")
-	answerDescription, descriptionOk := stringField(answerJSON, "description")
-	answerError, errorOk := stringField(answerJSON, "error")
-
-	if errorOk && answerError != "" {
+	if haikuResponse.Error != "" {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusBadRequest,
 			Code:       types.ErrInvalidRequest,
-			Details:    string(answerError),
+			Details:    haikuResponse.Error,
 		}
 	}
 
-	if !haikuOk || !descriptionOk {
+	if haikuResponse.Haiku == "" || haikuResponse.Description == "" {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusBadRequest,
 			Code:       types.ErrInvalidRequest,
@@ -173,20 +150,7 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 		}
 	}
 
-	haiku.Haiku = answerHaiku
-	haiku.Description = answerDescription
+	haiku.Haiku = haikuResponse.Haiku
+	haiku.Description = haikuResponse.Description
 	return haiku, nil
-}
-
-func stringField(m map[string]any, key string) (string, bool) {
-	raw, ok := m[key]
-	if !ok || raw == nil {
-		return "", false
-	}
-	str, ok := raw.(string)
-	if ok {
-		return str, true
-	}
-
-	return fmt.Sprintf("%v", raw), true
 }
