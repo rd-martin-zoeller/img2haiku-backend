@@ -1,5 +1,7 @@
 package types
 
+import "context"
+
 type ComposeRequest struct {
 	Language    string   `json:"language"`
 	Tags        []string `json:"tags"`
@@ -12,5 +14,5 @@ type Haiku struct {
 }
 
 type Client interface {
-	Call(prompt, base64Image string) (Haiku, *ComposeError)
+	Call(ctx context.Context, prompt, base64Image string) (Haiku, *ComposeError)
 }

@@ -26,7 +26,7 @@ func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	haiku, err := client.Call(prompt, req.Base64Image)
+	haiku, err := client.Call(r.Context(), prompt, req.Base64Image)
 	if err != nil {
 		writeError(w, *err)
 		return

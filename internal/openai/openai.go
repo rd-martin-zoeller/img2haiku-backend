@@ -2,6 +2,7 @@ package openai
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -26,7 +27,7 @@ type OpenAiMessage struct {
 
 type OpenAiClient struct{}
 
-func (c *OpenAiClient) Call(prompt, base64Image string) (types.Haiku, *types.ComposeError) {
+func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (types.Haiku, *types.ComposeError) {
 	var haiku types.Haiku
 	reqObj := makeRequestObject(prompt, base64Image)
 
@@ -40,6 +41,7 @@ func (c *OpenAiClient) Call(prompt, base64Image string) (types.Haiku, *types.Com
 	}
 
 	req, reqErr := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(bodyBytes))
+	req = req.WithContext(ctx)
 
 	if reqErr != nil {
 		return haiku, &types.ComposeError{
