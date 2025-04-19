@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
+
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
 
-func makePrompt(language string, tags []string) (string, *ComposeError) {
+func makePrompt(language string, tags []string) (string, *types.ComposeError) {
 	var prompt string
 
 	data := struct {
@@ -45,18 +47,18 @@ func makePrompt(language string, tags []string) (string, *ComposeError) {
 
 	template, err := template.New("prompt").Parse(promptTemplate)
 	if err != nil {
-		return prompt, &ComposeError{
+		return prompt, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
-			Code:       ErrInternalError,
+			Code:       types.ErrInternalError,
 			Details:    "Failed to parse prompt template: " + err.Error(),
 		}
 	}
 
 	var buff bytes.Buffer
 	if err := template.Execute(&buff, data); err != nil {
-		return prompt, &ComposeError{
+		return prompt, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
-			Code:       ErrInternalError,
+			Code:       types.ErrInternalError,
 			Details:    "Failed to execute prompt template: " + err.Error(),
 		}
 	}

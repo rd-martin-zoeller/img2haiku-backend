@@ -1,4 +1,4 @@
-package compose
+package types
 
 type ErrorCode string
 

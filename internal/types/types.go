@@ -1,4 +1,4 @@
-package compose
+package types
 
 type ComposeRequest struct {
 	Language    string   `json:"language"`
@@ -9,4 +9,8 @@ type ComposeRequest struct {
 type Haiku struct {
 	Haiku       string `json:"haiku"`
 	Description string `json:"description"`
+}
+
+type Client interface {
+	Call(prompt, base64Image string) (Haiku, *ComposeError)
 }

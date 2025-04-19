@@ -3,31 +3,43 @@ package compose
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
 
-func ComposeHaiku(w http.ResponseWriter, r *http.Request) {
-	_, composeErr := validateRequest(r)
+func ComposeHaiku(client types.Client) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		composeHaiku(client, w, r)
+	}
+}
 
-	w.Header().Set("Content-Type", "application/json")
+func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
+	req, err := validateRequest(r)
+	if err != nil {
+		writeError(w, *err)
+		return
+	}
 
+	prompt, composeErr := makePrompt(req.Language, req.Tags)
 	if composeErr != nil {
 		writeError(w, *composeErr)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	haiku := Haiku{
-		Haiku: `Reges Treiben in kühler Sommernacht
-		Holz trägt Glückseligkeit
-		Der Gott des Donners ist im Tal`,
-		Description: "Das ist ein Beispiel-Haiku",
+	haiku, err := client.Call(prompt, req.Base64Image)
+	if err != nil {
+		writeError(w, *err)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(haiku)
 }
 
-func writeError(w http.ResponseWriter, error ComposeError) {
+func writeError(w http.ResponseWriter, error types.ComposeError) {
 	w.WriteHeader(error.StatusCode)
-	errorResponse := ErrorResponse{
+	errorResponse := types.ErrorResponse{
 		Code:    error.Code,
 		Details: error.Details,
 	}

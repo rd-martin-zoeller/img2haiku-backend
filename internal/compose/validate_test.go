@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
 
 const validApiKey, invalidApiKey = "valid_api_key", "invalid_api_key"
@@ -13,17 +15,17 @@ func TestValidateRequest(t *testing.T) {
 	cases := []struct {
 		name           string
 		httpMethod     string
-		body           *ComposeRequest
+		body           *types.ComposeRequest
 		apiKey         string
 		wantStatusCode int
-		wantErrorCode  ErrorCode
+		wantErrorCode  types.ErrorCode
 		wantDetails    string
 	}{
 		{
 			name:           "API key is missing",
 			httpMethod:     "GET",
 			wantStatusCode: 401,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Invalid API key",
 		},
 		{
@@ -31,7 +33,7 @@ func TestValidateRequest(t *testing.T) {
 			httpMethod:     "GET",
 			apiKey:         invalidApiKey,
 			wantStatusCode: 401,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Invalid API key",
 		},
 		{
@@ -39,7 +41,7 @@ func TestValidateRequest(t *testing.T) {
 			httpMethod:     "GET",
 			apiKey:         validApiKey,
 			wantStatusCode: 405,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Method not allowed",
 		},
 		{
@@ -47,34 +49,34 @@ func TestValidateRequest(t *testing.T) {
 			httpMethod:     "POST",
 			apiKey:         validApiKey,
 			wantStatusCode: 500,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Failed to decode request body: EOF",
 		},
 		{
 			name:           "body is empty",
 			httpMethod:     "POST",
-			body:           &ComposeRequest{},
+			body:           &types.ComposeRequest{},
 			apiKey:         validApiKey,
 			wantStatusCode: 500,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Language is required",
 		},
 		{
 			name:           "language is empty",
 			httpMethod:     "POST",
-			body:           &ComposeRequest{Language: ""},
+			body:           &types.ComposeRequest{Language: ""},
 			apiKey:         validApiKey,
 			wantStatusCode: 500,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Language is required",
 		},
 		{
 			name:           "base64 image is empty",
 			httpMethod:     "POST",
-			body:           &ComposeRequest{Language: "English", Base64Image: ""},
+			body:           &types.ComposeRequest{Language: "English", Base64Image: ""},
 			apiKey:         validApiKey,
 			wantStatusCode: 500,
-			wantErrorCode:  ErrInternalError,
+			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Base64 image is required",
 		},
 	}
@@ -112,7 +114,7 @@ func TestValidateRequest(t *testing.T) {
 	}
 }
 
-func requestJSONHelper(t *testing.T, body *ComposeRequest) []byte {
+func requestJSONHelper(t *testing.T, body *types.ComposeRequest) []byte {
 	t.Helper()
 
 	var bodyBytes []byte
