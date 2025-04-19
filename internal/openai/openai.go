@@ -37,6 +37,8 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 		return haiku, utils.NewInternalErr("Failed to call OpenAI API: %s", err.Error())
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return haiku, utils.NewInternalErr("OpenAI API returned an error: %s", resp.Status)
 	}

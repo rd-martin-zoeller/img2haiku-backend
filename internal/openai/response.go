@@ -30,8 +30,6 @@ type haikuAnswer struct {
 func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) {
 	var haiku types.Haiku
 
-	defer resp.Body.Close()
-
 	var openAiResponse response
 	if err := json.NewDecoder(resp.Body).Decode(&openAiResponse); err != nil {
 		return haiku, utils.NewInternalErr("Failed to decode response body: %s", err.Error())
