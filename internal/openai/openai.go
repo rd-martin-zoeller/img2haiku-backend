@@ -24,19 +24,17 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 		return haiku, utils.NewInternalErr("Failed to encode request body: %s", err.Error())
 	}
 
-	req, reqErr := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(bodyBytes))
-
-	if reqErr != nil {
-		return haiku, utils.NewInternalErr("Failed to create request: %s", reqErr.Error())
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return haiku, utils.NewInternalErr("Failed to create request: %s", err.Error())
 	}
 
 	req.Header.Set("Authorization", "Bearer "+c.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, apiErr := c.Client.Do(req)
-
-	if apiErr != nil {
-		return haiku, utils.NewInternalErr("Failed to call OpenAI API: %s", apiErr.Error())
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return haiku, utils.NewInternalErr("Failed to call OpenAI API: %s", err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
