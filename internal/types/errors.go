@@ -17,3 +17,7 @@ type ComposeError struct {
 	Code       ErrorCode
 	Details    string
 }
+
+func (e *ComposeError) Error() string {
+	return e.Details
+}

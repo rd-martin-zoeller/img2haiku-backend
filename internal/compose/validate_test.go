@@ -2,6 +2,7 @@ package compose
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -99,16 +100,21 @@ func TestValidateRequest(t *testing.T) {
 				t.Fatalf("Expected error, got nil")
 			}
 
-			if err.StatusCode != c.wantStatusCode {
-				t.Errorf("Expected status code %d, got %d", c.wantStatusCode, err.StatusCode)
-			}
+			var composeErr *types.ComposeError
+			if errors.As(err, &composeErr) {
+				if composeErr.StatusCode != c.wantStatusCode {
+					t.Errorf("Expected status code %d, got %d", c.wantStatusCode, composeErr.StatusCode)
+				}
 
-			if err.Code != c.wantErrorCode {
-				t.Errorf("Expected error code %s, got %s", c.wantErrorCode, err.Code)
-			}
+				if composeErr.Code != c.wantErrorCode {
+					t.Errorf("Expected error code %s, got %s", c.wantErrorCode, composeErr.Code)
+				}
 
-			if err.Details != c.wantDetails {
-				t.Errorf("Expected error details %s, got %s", c.wantDetails, err.Details)
+				if composeErr.Details != c.wantDetails {
+					t.Errorf("Expected error details %s, got %s", c.wantDetails, composeErr.Details)
+				}
+			} else {
+				t.Fatalf("Expected ComposeError, got %T, %s", err, err.Error())
 			}
 		})
 	}
@@ -117,14 +123,14 @@ func TestValidateRequest(t *testing.T) {
 func requestJSONHelper(t *testing.T, body *types.ComposeRequest) []byte {
 	t.Helper()
 
-	var bodyBytes []byte
 	if body != nil {
-		var marshalErr error
-		bodyBytes, marshalErr = json.Marshal(body)
-		if marshalErr != nil {
-			t.Fatalf("failed to marshal ComposeRequest: %v", marshalErr)
+		bodyBytes, err := json.Marshal(body)
+		if err != nil {
+			t.Fatalf("failed to marshal ComposeRequest: %v", err)
 		}
+
+		return bodyBytes
 	}
 
-	return bodyBytes
+	return []byte{}
 }

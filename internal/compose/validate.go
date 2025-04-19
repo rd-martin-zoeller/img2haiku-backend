@@ -9,7 +9,7 @@ import (
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/utils"
 )
 
-func validateRequest(r *http.Request) (types.ComposeRequest, *types.ComposeError) {
+func validateRequest(r *http.Request) (types.ComposeRequest, error) {
 	var req types.ComposeRequest
 
 	if apiKey := r.Header.Get("X-API-Key"); apiKey == "" || apiKey != os.Getenv("API_KEY") {

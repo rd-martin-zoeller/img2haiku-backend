@@ -14,5 +14,5 @@ type Haiku struct {
 }
 
 type Client interface {
-	Call(ctx context.Context, prompt, base64Image string) (Haiku, *ComposeError)
+	Call(ctx context.Context, prompt, base64Image string) (Haiku, error)
 }

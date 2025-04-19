@@ -27,7 +27,7 @@ type haikuAnswer struct {
 	Error       string `json:"error"`
 }
 
-func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) {
+func handleResponseBody(resp *http.Response) (types.Haiku, error) {
 	var haiku types.Haiku
 
 	var openAiResponse response

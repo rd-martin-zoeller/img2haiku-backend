@@ -3,9 +3,12 @@ package openai
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
 
 func TestHandleResponseBody(t *testing.T) {
@@ -130,12 +133,13 @@ func TestHandleResponseBody(t *testing.T) {
 				Body:       io.NopCloser(bytes.NewBuffer(bodyBytes)),
 			}
 
-			haiku, composeErr := handleResponseBody(&httpResponse)
+			haiku, err := handleResponseBody(&httpResponse)
 			if c.wantErrorMessage != "" {
-				if composeErr == nil {
+				if err == nil {
 					t.Fatalf("Expected error, got nil")
 				} else {
-					if composeErr.Details != c.wantErrorMessage {
+					var composeErr *types.ComposeError
+					if errors.As(err, &composeErr) && composeErr.Details != c.wantErrorMessage {
 						t.Errorf("Expected error details: %s\nActual error details: %s", c.wantErrorMessage, composeErr.Details)
 					}
 				}

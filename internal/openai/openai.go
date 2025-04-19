@@ -17,7 +17,7 @@ type OpenAiClient struct {
 
 const apiURL = "https://api.openai.com/v1/chat/completions"
 
-func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (types.Haiku, *types.ComposeError) {
+func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (types.Haiku, error) {
 	var haiku types.Haiku
 	reqObj := buildRequest(prompt, base64Image)
 

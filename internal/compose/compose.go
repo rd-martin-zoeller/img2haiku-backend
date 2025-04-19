@@ -2,6 +2,7 @@ package compose
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
@@ -16,19 +17,19 @@ func ComposeHaiku(client types.Client) func(w http.ResponseWriter, r *http.Reque
 func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
 	req, err := validateRequest(r)
 	if err != nil {
-		writeError(w, *err)
+		writeError(w, err)
 		return
 	}
 
-	prompt, composeErr := makePrompt(req.Language, req.Tags)
-	if composeErr != nil {
-		writeError(w, *composeErr)
+	prompt, err := makePrompt(req.Language, req.Tags)
+	if err != nil {
+		writeError(w, err)
 		return
 	}
 
 	haiku, err := client.Call(r.Context(), prompt, req.Base64Image)
 	if err != nil {
-		writeError(w, *err)
+		writeError(w, err)
 		return
 	}
 
@@ -37,11 +38,21 @@ func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(haiku)
 }
 
-func writeError(w http.ResponseWriter, error types.ComposeError) {
-	w.WriteHeader(error.StatusCode)
-	errorResponse := types.ErrorResponse{
-		Code:    error.Code,
-		Details: error.Details,
+func writeError(w http.ResponseWriter, err error) {
+	var composeErr *types.ComposeError
+	if errors.As(err, &composeErr) {
+		w.WriteHeader(composeErr.StatusCode)
+		errorResponse := types.ErrorResponse{
+			Code:    composeErr.Code,
+			Details: composeErr.Details,
+		}
+		json.NewEncoder(w).Encode(errorResponse)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		errorResponse := types.ErrorResponse{
+			Code:    types.ErrInternalError,
+			Details: "An unexpected error occurred: " + err.Error(),
+		}
+		json.NewEncoder(w).Encode(errorResponse)
 	}
-	json.NewEncoder(w).Encode(errorResponse)
 }

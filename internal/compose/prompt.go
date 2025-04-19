@@ -5,11 +5,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/utils"
 )
 
-func makePrompt(language string, tags []string) (string, *types.ComposeError) {
+func makePrompt(language string, tags []string) (string, error) {
 	var prompt string
 
 	data := struct {
