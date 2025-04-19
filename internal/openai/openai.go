@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
@@ -51,7 +52,11 @@ func (c *OpenAiClient) Call(prompt, base64Image string) (types.Haiku, *types.Com
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENAI_API_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, apiErr := http.DefaultClient.Do(req)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	resp, apiErr := client.Do(req)
 
 	if apiErr != nil {
 		return haiku, &types.ComposeError{
