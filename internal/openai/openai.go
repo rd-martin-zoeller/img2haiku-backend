@@ -39,6 +39,7 @@ func (c *OpenAiClient) Call(prompt, base64Image string) (types.Haiku, *types.Com
 	}
 
 	req, reqErr := http.NewRequest(http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(bodyBytes))
+
 	if reqErr != nil {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
@@ -51,6 +52,7 @@ func (c *OpenAiClient) Call(prompt, base64Image string) (types.Haiku, *types.Com
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, apiErr := http.DefaultClient.Do(req)
+
 	if apiErr != nil {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
@@ -58,6 +60,8 @@ func (c *OpenAiClient) Call(prompt, base64Image string) (types.Haiku, *types.Com
 			Details:    "Failed to call OpenAI API: " + apiErr.Error(),
 		}
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return haiku, &types.ComposeError{
@@ -99,6 +103,7 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 	var haiku types.Haiku
 
 	respBytes, ioErr := io.ReadAll(resp.Body)
+
 	if ioErr != nil {
 		return haiku, &types.ComposeError{
 			StatusCode: http.StatusInternalServerError,
