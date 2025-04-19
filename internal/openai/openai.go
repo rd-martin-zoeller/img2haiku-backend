@@ -13,7 +13,7 @@ import (
 
 func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (types.Haiku, *types.ComposeError) {
 	var haiku types.Haiku
-	reqObj := makeRequestObject(prompt, base64Image)
+	reqObj := buildRequest(prompt, base64Image)
 
 	bodyBytes, err := json.Marshal(reqObj)
 	if err != nil {
@@ -43,31 +43,6 @@ func (c *OpenAiClient) Call(ctx context.Context, prompt, base64Image string) (ty
 	}
 
 	return handleResponseBody(resp)
-}
-
-func makeRequestObject(prompt, base64Image string) *openAiRequest {
-	return &openAiRequest{
-		Model: "gpt-4o-2024-08-06",
-		Messages: []openAiMessage{
-			{
-				Role: "user",
-				Content: []openAiMessageContent{
-					{
-						Type: "text",
-						Text: prompt,
-					},
-					{
-						Type: "image_url",
-						ImageURL: &openAiImageURLField{
-							URL: "data:image/jpeg;base64," + base64Image,
-						},
-					},
-				},
-			},
-		},
-		MaxTokens:   200,
-		Temperature: 1.0,
-	}
 }
 
 func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) {
