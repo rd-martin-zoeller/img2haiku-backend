@@ -82,7 +82,7 @@ func TestHandleResponseBody(t *testing.T) {
 			wantErrorMessage: "EXAMPLE_ERROR",
 		},
 		{
-			name: "error JSON",
+			name: "no relevant JSON field",
 			responseBody: OpenAiResponseBody{
 				Choices: []OpenAiResponseChoice{
 					{
