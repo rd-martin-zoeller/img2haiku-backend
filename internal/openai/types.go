@@ -15,8 +15,18 @@ type OpenAiRequest struct {
 }
 
 type OpenAiMessage struct {
-	Role    string           `json:"role"`
-	Content []map[string]any `json:"content"`
+	Role    string                 `json:"role"`
+	Content []OpenAiMessageContent `json:"content"`
+}
+
+type OpenAiMessageContent struct {
+	Type     string               `json:"type"`
+	Text     string               `json:"text,omitempty"`
+	ImageURL *OpenAiImageURLField `json:"image_url,omitempty"`
+}
+
+type OpenAiImageURLField struct {
+	URL string `json:"url"`
 }
 
 type OpenAiResponseBody struct {

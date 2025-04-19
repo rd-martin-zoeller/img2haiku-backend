@@ -51,15 +51,15 @@ func makeRequestObject(prompt, base64Image string) *OpenAiRequest {
 		Messages: []OpenAiMessage{
 			{
 				Role: "user",
-				Content: []map[string]any{
+				Content: []OpenAiMessageContent{
 					{
-						"type": "text",
-						"text": prompt,
+						Type: "text",
+						Text: prompt,
 					},
 					{
-						"type": "image_url",
-						"image_url": map[string]any{
-							"url": "data:image/jpeg;base64," + base64Image,
+						Type: "image_url",
+						ImageURL: &OpenAiImageURLField{
+							URL: "data:image/jpeg;base64," + base64Image,
 						},
 					},
 				},

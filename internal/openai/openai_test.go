@@ -19,7 +19,7 @@ func TestMakeRequestObject(t *testing.T) {
 
 	json := string(bodyBytes)
 
-	want := `{"model":"gpt-4o-2024-08-06","messages":[{"role":"user","content":[{"text":"EXAMPLE_PROMPT","type":"text"},{"image_url":{"url":"data:image/jpeg;base64,EXAMPLE_BASE64_IMAGE"},"type":"image_url"}]}],"max_tokens":200,"temperature":1}`
+	want := `{"model":"gpt-4o-2024-08-06","messages":[{"role":"user","content":[{"type":"text","text":"EXAMPLE_PROMPT"},{"type":"image_url","image_url":{"url":"data:image/jpeg;base64,EXAMPLE_BASE64_IMAGE"}}]}],"max_tokens":200,"temperature":1}`
 
 	if strings.Compare(json, want) != 0 {
 		t.Errorf("Expected JSON: %s, got: %s", want, json)
