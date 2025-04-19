@@ -121,6 +121,19 @@ func TestHandleResponseBody(t *testing.T) {
 			},
 			wantHaiku: "EXAMPLE_HAIKU",
 		},
+		{
+			name: "sanitizes valid JSON",
+			responseBody: OpenAiResponseBody{
+				Choices: []OpenAiResponseChoice{
+					{
+						Message: OpenAiResponseMessage{
+							Content: `{"description":"EXAMPLE_DESCRIPTION","haiku":"EXAMPLE_HAIKU\\nEXAMPLE_HAIKU"}`,
+						},
+					},
+				},
+			},
+			wantHaiku: "EXAMPLE_HAIKU\nEXAMPLE_HAIKU",
+		},
 	}
 
 	for _, c := range cases {

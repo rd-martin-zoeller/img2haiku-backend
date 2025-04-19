@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
@@ -150,7 +151,13 @@ func handleResponseBody(resp *http.Response) (types.Haiku, *types.ComposeError) 
 		}
 	}
 
-	haiku.Haiku = haikuResponse.Haiku
+	haiku.Haiku = sanitizeHaiku(haikuResponse.Haiku)
 	haiku.Description = haikuResponse.Description
 	return haiku, nil
+}
+
+func sanitizeHaiku(haiku string) string {
+	// Sometimes, ChatGPT escapes newline characters (\n) as \\n.
+	// This function replaces them with actual newlines.
+	return strings.ReplaceAll(haiku, "\\n", "\n")
 }
