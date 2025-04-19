@@ -1,41 +1,41 @@
 package openai
 
-type openAiRequest struct {
-	Model       string                 `json:"model"`
-	Messages    []openAiRequestMessage `json:"messages"`
-	MaxTokens   int                    `json:"max_tokens"`
-	Temperature float32                `json:"temperature"`
+type request struct {
+	Model       string        `json:"model"`
+	Messages    []chatMessage `json:"messages"`
+	MaxTokens   int           `json:"max_tokens"`
+	Temperature float32       `json:"temperature"`
 }
 
-type openAiRequestMessage struct {
-	Role    string                        `json:"role"`
-	Content []openAiRequestMessageContent `json:"content"`
+type chatMessage struct {
+	Role    string           `json:"role"`
+	Content []messageContent `json:"content"`
 }
 
-type openAiRequestMessageContent struct {
-	Type     string               `json:"type"`
-	Text     string               `json:"text,omitempty"`
-	ImageURL *openAiImageURLField `json:"image_url,omitempty"`
+type messageContent struct {
+	Type     string    `json:"type"`
+	Text     string    `json:"text,omitempty"`
+	ImageURL *imageUrl `json:"image_url,omitempty"`
 }
 
-type openAiImageURLField struct {
+type imageUrl struct {
 	URL string `json:"url"`
 }
 
-func buildRequest(prompt, base64Image string) *openAiRequest {
-	return &openAiRequest{
+func buildRequest(prompt, base64Image string) *request {
+	return &request{
 		Model: "gpt-4o-2024-08-06",
-		Messages: []openAiRequestMessage{
+		Messages: []chatMessage{
 			{
 				Role: "user",
-				Content: []openAiRequestMessageContent{
+				Content: []messageContent{
 					{
 						Type: "text",
 						Text: prompt,
 					},
 					{
 						Type: "image_url",
-						ImageURL: &openAiImageURLField{
+						ImageURL: &imageUrl{
 							URL: "data:image/jpeg;base64," + base64Image,
 						},
 					},
