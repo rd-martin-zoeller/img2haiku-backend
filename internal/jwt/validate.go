@@ -3,13 +3,12 @@ package jwt
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
-func Validate(tokenString string) (bool, error) {
-	key, err := loadPublicKey()
+func Validate(tokenString string, pubKeyStr string) (bool, error) {
+	key, err := loadPublicKey(pubKeyStr)
 	if err != nil {
 		return false, err
 	}
@@ -34,9 +33,6 @@ func Validate(tokenString string) (bool, error) {
 		if !validateSub(claims) {
 			return false, errors.New("invalid subject")
 		}
-		if !validateExp(claims) {
-			return false, errors.New("token expired")
-		}
 		return true, nil
 	}
 
@@ -57,12 +53,4 @@ func validateSub(claims jwt.MapClaims) bool {
 		return false
 	}
 	return sub == "img2haiku-backend-demo"
-}
-
-func validateExp(claims jwt.MapClaims) bool {
-	exp, ok := claims["exp"].(float64)
-	if !ok {
-		return false
-	}
-	return time.Unix(int64(exp), 0).After(time.Now())
 }

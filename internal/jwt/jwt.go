@@ -1,46 +1,46 @@
 package jwt
 
 import (
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
 const (
-	privateKeyEnvVar = "JWT_PRIVATE_KEY"
-	publicKeyEnvVar  = "JWT_PUBLIC_KEY"
-	sub              = "img2haiku-backend-demo"
-	aud              = "img2haiku-backend"
-	ttl              = 15 * time.Minute
+	sub = "img2haiku-backend-demo"
+	aud = "img2haiku-backend"
+	ttl = 15 * time.Minute
 )
 
-func JWTForTesting() (string, error) {
-	key, err := loadPrivateKey()
+type JWTConfig struct {
+	KeyPair KeyPair
+	Sub     string
+	Aud     string
+	Exp     time.Duration
+}
+
+type KeyPair struct {
+	Private string
+	Public  string
+}
+
+func JWTForTesting(config JWTConfig) (string, error) {
+	key, err := loadPrivateKey(config.KeyPair.Private)
 	if err != nil {
 		return "", err
 	}
 
 	now := time.Now()
 	jwt := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"sub": sub,
-		"aud": aud,
+		"sub": config.Sub,
+		"aud": config.Aud,
 		"iat": now.Unix(),
-		"exp": now.Add(ttl).Unix(),
+		"exp": now.Add(config.Exp).Unix(),
 	})
 
 	jwtString, err := jwt.SignedString(key)
 	if err != nil {
 		return "", err
-	}
-
-	// Validate the JWT
-	valid, err := Validate(jwtString)
-	if err != nil {
-		return "", err
-	}
-	if !valid {
-		return "", errors.New("invalid JWT")
 	}
 
 	return jwtString, nil

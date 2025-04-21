@@ -5,13 +5,11 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"os"
 )
 
-func loadPrivateKey() (*rsa.PrivateKey, error) {
-	keyStr := os.Getenv(privateKeyEnvVar)
+func loadPrivateKey(keyStr string) (*rsa.PrivateKey, error) {
 	if keyStr == "" {
-		return nil, errors.New("env var not set: " + privateKeyEnvVar)
+		return nil, errors.New("keyStr var not set: " + keyStr)
 	}
 
 	keyData := []byte(keyStr)
@@ -27,10 +25,9 @@ func loadPrivateKey() (*rsa.PrivateKey, error) {
 	return rsaKey, nil
 }
 
-func loadPublicKey() (*rsa.PublicKey, error) {
-	keyStr := os.Getenv(publicKeyEnvVar)
+func loadPublicKey(keyStr string) (*rsa.PublicKey, error) {
 	if keyStr == "" {
-		return nil, errors.New("env var not set: " + publicKeyEnvVar)
+		return nil, errors.New("keyStr var not set: " + keyStr)
 	}
 
 	block, _ := pem.Decode([]byte(keyStr))
