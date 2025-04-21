@@ -28,5 +28,5 @@ func prepJWT() {
 		log.Fatalf("JWT for testing is empty\n")
 	}
 
-	log.Printf("+++++ JWT for testing+++++\n%s\n", jwt)
+	log.Printf("+++++ JWT for testing +++++\n%s\n", jwt)
 }
