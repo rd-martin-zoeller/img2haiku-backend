@@ -6,41 +6,48 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/jwt"
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 )
 
-const validApiKey, invalidApiKey = "valid_api_key", "invalid_api_key"
-
 func TestValidateRequest(t *testing.T) {
+	keyPair, err := jwt.GenKeyPair()
+	if err != nil {
+		t.Fatalf("Failed to generate RSA key pair: %v", err)
+	}
+	invalidToken := token(t, keyPair, -time.Minute)
+	validToken := token(t, keyPair, time.Minute)
+	t.Setenv("JWT_SECRET", keyPair.Public)
 	cases := []struct {
 		name           string
 		httpMethod     string
 		body           *types.ComposeRequest
-		apiKey         string
+		token          string
 		wantStatusCode int
 		wantErrorCode  types.ErrorCode
 		wantDetails    string
 	}{
 		{
-			name:           "API key is missing",
+			name:           "token is missing",
 			httpMethod:     "GET",
 			wantStatusCode: 401,
 			wantErrorCode:  types.ErrInternalError,
-			wantDetails:    "Invalid API key",
+			wantDetails:    "Invalid JWT token: token contains an invalid number of segments",
 		},
 		{
-			name:           "API key is invalid",
+			name:           "token is invalid",
 			httpMethod:     "GET",
-			apiKey:         invalidApiKey,
+			token:          invalidToken,
 			wantStatusCode: 401,
 			wantErrorCode:  types.ErrInternalError,
-			wantDetails:    "Invalid API key",
+			wantDetails:    "Invalid JWT token: Token is expired",
 		},
 		{
 			name:           "method is not POST",
 			httpMethod:     "GET",
-			apiKey:         validApiKey,
+			token:          validToken,
 			wantStatusCode: 405,
 			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Method not allowed",
@@ -48,7 +55,7 @@ func TestValidateRequest(t *testing.T) {
 		{
 			name:           "body is nil",
 			httpMethod:     "POST",
-			apiKey:         validApiKey,
+			token:          validToken,
 			wantStatusCode: 500,
 			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Failed to decode request body: EOF",
@@ -57,7 +64,7 @@ func TestValidateRequest(t *testing.T) {
 			name:           "body is empty",
 			httpMethod:     "POST",
 			body:           &types.ComposeRequest{},
-			apiKey:         validApiKey,
+			token:          validToken,
 			wantStatusCode: 500,
 			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Language is required",
@@ -66,7 +73,7 @@ func TestValidateRequest(t *testing.T) {
 			name:           "language is empty",
 			httpMethod:     "POST",
 			body:           &types.ComposeRequest{Language: ""},
-			apiKey:         validApiKey,
+			token:          validToken,
 			wantStatusCode: 500,
 			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Language is required",
@@ -75,7 +82,7 @@ func TestValidateRequest(t *testing.T) {
 			name:           "base64 image is empty",
 			httpMethod:     "POST",
 			body:           &types.ComposeRequest{Language: "English", Base64Image: ""},
-			apiKey:         validApiKey,
+			token:          validToken,
 			wantStatusCode: 500,
 			wantErrorCode:  types.ErrInternalError,
 			wantDetails:    "Base64 image is required",
@@ -84,15 +91,13 @@ func TestValidateRequest(t *testing.T) {
 
 	for _, c := range cases {
 		c := c // capture range variable
-		t.Setenv("API_KEY", validApiKey)
-
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
 			bodyBytes := requestJSONHelper(t, c.body)
 
 			req := httptest.NewRequest(c.httpMethod, "/", strings.NewReader(string(bodyBytes)))
-			req.Header.Set("X-API-Key", c.apiKey)
+			req.Header.Set("Authorization", "Bearer "+c.token)
 
 			_, err := validateRequest(req)
 
@@ -133,4 +138,20 @@ func requestJSONHelper(t *testing.T, body *types.ComposeRequest) []byte {
 	}
 
 	return []byte{}
+}
+
+func token(t *testing.T, keyPair jwt.KeyPair, exp time.Duration) string {
+	t.Helper()
+
+	token, err := jwt.JWTForTesting(jwt.JWTConfig{
+		KeyPair: keyPair,
+		Sub:     "img2haiku-backend-demo",
+		Aud:     "img2haiku-backend",
+		Exp:     exp,
+	})
+
+	if err != nil {
+		t.Fatalf("failed to generate JWT: %v", err)
+	}
+	return token
 }

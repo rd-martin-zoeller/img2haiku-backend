@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/jwt"
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/utils"
 )
@@ -12,8 +13,8 @@ import (
 func validateRequest(r *http.Request) (types.ComposeRequest, error) {
 	var req types.ComposeRequest
 
-	if apiKey := r.Header.Get("X-API-Key"); apiKey == "" || apiKey != os.Getenv("API_KEY") {
-		return req, utils.NewErr(http.StatusUnauthorized, types.ErrInternalError, "%s", "Invalid API key")
+	if err := validateAuthHeader(r); err != nil {
+		return req, err
 	}
 
 	if r.Method != http.MethodPost {
@@ -33,4 +34,24 @@ func validateRequest(r *http.Request) (types.ComposeRequest, error) {
 	}
 
 	return req, nil
+}
+
+func validateAuthHeader(r *http.Request) error {
+	auth := r.Header.Get("Authorization")
+	if auth == "" {
+		return utils.NewErr(http.StatusUnauthorized, types.ErrInternalError, "%s", "Authorization header is required")
+	}
+	if len(auth) < 7 || auth[:7] != "Bearer " {
+		return utils.NewErr(http.StatusUnauthorized, types.ErrInternalError, "%s", "Authorization header must start with 'Bearer '")
+	}
+	token := auth[7:]
+	valid, err := jwt.Validate(token, os.Getenv("JWT_SECRET"))
+	if err != nil {
+		return utils.NewErr(http.StatusUnauthorized, types.ErrInternalError, "%s", "Invalid JWT token: "+err.Error())
+	}
+	if !valid {
+		return utils.NewErr(http.StatusUnauthorized, types.ErrInternalError, "%s", "Invalid JWT token")
+	}
+
+	return nil
 }
