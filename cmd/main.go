@@ -20,6 +20,16 @@ func main() {
 		hostname = "127.0.0.1"
 	}
 
+	jwt, err := jwtForTesting()
+	if err != nil {
+		log.Fatalf("Could not generate JWT for testing: %v\n", err)
+	}
+
+	if jwt == "" {
+		log.Fatalf("JWT for testing is empty\n")
+	}
+	log.Printf("JWT for testing: %s\n", jwt)
+
 	if err := funcframework.StartHostPort(hostname, port); err != nil {
 		log.Fatalf("funcframework.StartHostPort: %v\n", err)
 	}
