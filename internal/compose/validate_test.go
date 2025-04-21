@@ -41,8 +41,8 @@ func TestValidateRequest(t *testing.T) {
 			httpMethod:     "GET",
 			token:          invalidToken,
 			wantStatusCode: 401,
-			wantErrorCode:  types.ErrInternalError,
-			wantDetails:    "Invalid JWT token: Token is expired",
+			wantErrorCode:  types.ErrAuthExpired,
+			wantDetails:    "Token is expired",
 		},
 		{
 			name:           "method is not POST",

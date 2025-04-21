@@ -47,6 +47,9 @@ func validateAuthHeader(r *http.Request) error {
 	token := auth[7:]
 	valid, err := jwt.Validate(token, os.Getenv("JWT_SECRET"))
 	if err != nil {
+		if err.Error() == "Token is expired" {
+			return utils.NewErr(http.StatusUnauthorized, types.ErrAuthExpired, "%s", "Token is expired")
+		}
 		return utils.NewErr(http.StatusUnauthorized, types.ErrInternalError, "%s", "Invalid JWT token: "+err.Error())
 	}
 	if !valid {

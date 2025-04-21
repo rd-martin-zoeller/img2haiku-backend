@@ -5,6 +5,7 @@ type ErrorCode string
 const (
 	ErrInvalidRequest ErrorCode = "INVALID_REQUEST"
 	ErrInternalError  ErrorCode = "INTERNAL_ERROR"
+	ErrAuthExpired    ErrorCode = "AUTH_EXPIRED"
 )
 
 type ErrorResponse struct {
