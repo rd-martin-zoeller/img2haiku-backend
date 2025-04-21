@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -25,8 +24,6 @@ func Validate(tokenString string, pubKeyStr string) (bool, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println("Claims:", claims)
-
 		if !validateAud(claims) {
 			return false, errors.New("invalid audience")
 		}
