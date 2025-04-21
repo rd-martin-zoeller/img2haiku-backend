@@ -2,7 +2,10 @@ module github.com/rd-martin-zoeller/img2haiku-backend
 
 go 1.24
 
-require github.com/GoogleCloudPlatform/functions-framework-go v1.9.2
+require (
+	github.com/GoogleCloudPlatform/functions-framework-go v1.9.2
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+)
 
 require (
 	cloud.google.com/go/functions v1.19.3 // indirect

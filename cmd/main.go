@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
+	"github.com/rd-martin-zoeller/img2haiku-backend/internal/jwt"
+
 	// Blank-import the function package so the init() runs
 	_ "github.com/rd-martin-zoeller/img2haiku-backend"
 )
@@ -20,7 +22,7 @@ func main() {
 		hostname = "127.0.0.1"
 	}
 
-	jwt, err := jwtForTesting()
+	jwt, err := jwt.JWTForTesting()
 	if err != nil {
 		log.Fatalf("Could not generate JWT for testing: %v\n", err)
 	}
@@ -29,6 +31,8 @@ func main() {
 		log.Fatalf("JWT for testing is empty\n")
 	}
 	log.Printf("JWT for testing: %s\n", jwt)
+
+	log.Printf("Starting function framework on %s:%s\n", hostname, port)
 
 	if err := funcframework.StartHostPort(hostname, port); err != nil {
 		log.Fatalf("funcframework.StartHostPort: %v\n", err)
