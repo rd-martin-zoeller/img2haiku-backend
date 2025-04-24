@@ -15,6 +15,8 @@ func ComposeHaiku(client types.Client) func(w http.ResponseWriter, r *http.Reque
 }
 
 func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	req, err := validateRequest(r)
 	if err != nil {
 		writeError(w, err)
@@ -33,7 +35,6 @@ func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(haiku)
 }
