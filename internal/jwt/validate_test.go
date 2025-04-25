@@ -44,16 +44,6 @@ func TestValidate(t *testing.T) {
 			wantError:  "crypto/rsa: verification error",
 		},
 		{
-			name:       "invalid subject",
-			privateKey: keyPair1.Private,
-			publicKey:  keyPair1.Public,
-			sub:        "invalid-subject",
-			aud:        aud,
-			exp:        ttl,
-			wantValid:  false,
-			wantError:  "invalid subject",
-		},
-		{
 			name:       "invalid audience",
 			privateKey: keyPair1.Private,
 			publicKey:  keyPair1.Public,

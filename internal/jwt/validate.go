@@ -27,9 +27,6 @@ func Validate(tokenString string, pubKeyStr string) (bool, error) {
 		if !validateAud(claims) {
 			return false, errors.New("invalid audience")
 		}
-		if !validateSub(claims) {
-			return false, errors.New("invalid subject")
-		}
 		return true, nil
 	}
 
@@ -42,12 +39,4 @@ func validateAud(claims jwt.MapClaims) bool {
 		return false
 	}
 	return aud == "img2haiku-backend"
-}
-
-func validateSub(claims jwt.MapClaims) bool {
-	sub, ok := claims["sub"].(string)
-	if !ok {
-		return false
-	}
-	return sub == "img2haiku-backend-demo"
 }
