@@ -3,6 +3,7 @@ package compose
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/rd-martin-zoeller/img2haiku-backend/internal/types"
@@ -20,18 +21,21 @@ func composeHaiku(client types.Client, w http.ResponseWriter, r *http.Request) {
 	req, err := validateRequest(r)
 	if err != nil {
 		writeError(w, err)
+		logError(err)
 		return
 	}
 
 	prompt, err := makePrompt(req.Language, req.Tags)
 	if err != nil {
 		writeError(w, err)
+		logError(err)
 		return
 	}
 
 	haiku, err := client.Call(r.Context(), prompt, req.Base64Image)
 	if err != nil {
 		writeError(w, err)
+		logError(err)
 		return
 	}
 
@@ -55,5 +59,16 @@ func writeError(w http.ResponseWriter, err error) {
 			Details: "An unexpected error occurred: " + err.Error(),
 		}
 		json.NewEncoder(w).Encode(errorResponse)
+	}
+}
+
+func logError(err error) {
+	var composeErr *types.ComposeError
+	if errors.As(err, &composeErr) {
+		if composeErr.Code == types.ErrInternalError || composeErr.Code == types.ErrInvalidRequest {
+			log.Printf("Encountered a compose error: %+v", err)
+		}
+	} else {
+		log.Printf("Encountered an error: %+v", err.Error())
 	}
 }
