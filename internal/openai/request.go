@@ -42,7 +42,7 @@ func buildRequest(prompt, base64Image string) *request {
 				},
 			},
 		},
-		MaxTokens:   200,
-		Temperature: 1.0,
+		MaxTokens:   150,
+		Temperature: 0.7,
 	}
 }

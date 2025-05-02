@@ -16,7 +16,7 @@ func TestMakePromp(t *testing.T) {
 		t.Errorf("Expected no error, got: %v", err)
 	}
 
-	const expectedLangCount = 4
+	const expectedLangCount = 5
 	if langCount := strings.Count(prompt, "English"); langCount != expectedLangCount {
 		t.Errorf("Expected prompt to contain 'English' %v times, got %v times instead", expectedLangCount, langCount)
 	}
